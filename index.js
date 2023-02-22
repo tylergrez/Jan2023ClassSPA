@@ -2,38 +2,86 @@ import { Header, Nav, Main, Footer } from "./components";
 import * as store from "./store";
 import Navigo from "navigo";
 import { capitalize } from "lodash";
-const router = new Navigo ("/");
-// then bring over the aggregated modules into the main index.js
-// can alternatively be written as import * as ____ (alias) from "./components" to import all modules
-// add menu toggle to bars icon in nav bar
+import axios from "axios";
+import dotenv from "dotenv";
 
-// document.querySelector(".fa-bars").addEventListener("click", () => {
-//   document.querySelector("nav > ul").classList.toggle("hidden--mobile");
-// }); no longer exists // moved below to afterRender function
+dotenv.config();
 
-// after the functions have been called with import, they need to be called to be associated with div-ID "root"
-function render (state = store.Home) {
+const router = new Navigo("/");
+
+function render(state = store.Home) {
   document.querySelector("#root").innerHTML = `
   ${Header(state)}
-  ${Footer()}
   ${Nav(store.Links)}
   ${Main(state)}
+  ${Footer()}
   `;
+  afterRender();
   router.updatePageLinks();
 }
 
-function afterRender () {
+function afterRender() {
   // add menu toggle to bars icon in nav bar
   document.querySelector(".fa-bars").addEventListener("click", () => {
     document.querySelector("nav > ul").classList.toggle("hidden--mobile");
+  });
 }
-// render (); //the router object replaces the render function, router.on needs to be last item listed in index.js
+
+router.hooks({
+  before: (done, params) => {
+    const view =
+      params && params.data && params.data.view
+        ? capitalize(params.data.view)
+        : "Home"; // Add a switch case statement to handle multiple routes
+    // Add a switch case statement to handle multiple routes
+    switch (view) {
+      case "Home":
+        axios
+          .get(
+            // Replace the key provided here with your own key from openweathermap
+            `https://api.openweathermap.org/data/2.5/weather?q=st%20louis&appid=${process.env.OPEN_WEATHER_MAP_API_KEY}`
+          )
+          .then(response => {
+            console.log(response.data);
+            const kelvinToFahrenheit = kelvinTemp =>
+              Math.round((kelvinTemp - 273.15) * (9 / 5) + 32);
+
+            // Save Data into state
+            store.Home.weather = {};
+            store.Home.weather.city = response.data.name;
+            store.Home.weather.temp = kelvinToFahrenheit(
+              response.data.main.temp
+            );
+            store.Home.weather.feelsLike = kelvinToFahrenheit(
+              response.data.main.feels_like
+            );
+            store.Home.weather.description =
+              response.data.weather[0].description;
+            console.log(store.Home.weather);
+
+            done();
+          });
+        break;
+      default:
+        done();
+    }
+  },
+  already: params => {
+    const view =
+      params && params.data && params.data.view
+        ? capitalize(params.data.view)
+        : "Home";
+
+    render(store[view]);
+  }
+});
+
 router
   .on({
     "/": () => render(),
-    ":view": (params) => {
+    ":view": params => {
       let view = capitalize(params.data.view);
       render(store[view]);
-    },
+    }
   })
   .resolve();
