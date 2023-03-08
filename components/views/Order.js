@@ -1,6 +1,6 @@
 import html from "html-literal"
 
-export default () => html`<section id="order">
+export default () => html`<section>
     <form id="order" method="POST" action="">
       <h2>Order a pizza</h2>
       <div>
@@ -80,7 +80,7 @@ export default () => html`<section id="order">
         type="hidden"
         name="customer"
         id="customer"
-        value="Anonymous Customer"
+        value="Tyler G"
       />
       <input type="submit" name="submit" value="Submit Pizza" />
     </form>
