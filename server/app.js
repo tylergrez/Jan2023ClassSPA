@@ -51,7 +51,7 @@ app.get("/status", (request, response) => {
   // Create the headers for response by default 200
   // Create the response body
   // End and return the response
-  response.status(418).json({ message: "Service healthy" });
+  response.status(200).json({ message: "Service healthy" });
 });
 
 app.get("/weather/:city", (request, response) => {
@@ -74,7 +74,7 @@ app.post("/add", (request, response) => {
   const num1 = request.body.numberOne;
   const num2 = request.body.numberTwo;
   const responseBody = {
-     sum: num1 + num2
+    sum: num1 + num2
   };
   response.json(responseBody);
 });
